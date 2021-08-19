@@ -1,4 +1,5 @@
-pub mod string;
+pub mod length;
+pub mod pattern;
 
 use crate::result::{ValidationResult, ValidationError};
 

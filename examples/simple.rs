@@ -1,6 +1,6 @@
 use bytecontrol::composition::compose_rules;
-use bytecontrol::rule::string::length;
 use bytecontrol::rule::Rule;
+use bytecontrol::rule::length::length;
 
 struct User {
     pub username: String
