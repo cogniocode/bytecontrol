@@ -1,6 +1,8 @@
 pub mod result;
-pub mod rule;
+pub mod rules;
 pub mod composition;
+pub mod condition;
+pub mod rule;
 
 #[cfg(test)]
 mod tests {

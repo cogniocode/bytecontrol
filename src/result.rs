@@ -1,10 +1,10 @@
-use std::result::Result;
 use std::fmt::{Display, Formatter};
+use std::result::Result;
 
 pub type ValidationResult = Result<(), ValidationError>;
 
 pub struct ValidationError {
-    pub messages: Vec<String>
+    pub messages: Vec<String>,
 }
 
 impl ValidationError {

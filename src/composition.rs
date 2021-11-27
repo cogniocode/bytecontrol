@@ -1,11 +1,12 @@
-use crate::rule::Rule;
-use crate::result::{ValidationResult, ValidationError};
 use std::rc::Rc;
+
+use crate::result::{ValidationError, ValidationResult};
+use crate::rule::Rule;
 
 #[derive(Clone)]
 pub enum CompositionKind {
     All,
-    Any
+    Any,
 }
 
 impl Default for CompositionKind {
@@ -16,28 +17,31 @@ impl Default for CompositionKind {
 
 pub struct CompositeRule<T> {
     pub kind: CompositionKind,
-    pub rules: Vec<Rc<dyn Rule<T>>>
+    pub rules: Vec<Rc<dyn Rule<T>>>,
+    pub message: Option<String>,
 }
 
-impl <T> Default for CompositeRule<T> {
+impl<T> Default for CompositeRule<T> {
     fn default() -> Self {
         CompositeRule {
             kind: CompositionKind::default(),
-            rules: Vec::default()
+            rules: Vec::default(),
+            message: Option::None,
         }
     }
 }
 
-impl <T> Clone for CompositeRule<T> {
+impl<T> Clone for CompositeRule<T> {
     fn clone(&self) -> Self {
         CompositeRule {
             kind: self.kind.clone(),
-            rules: self.rules.clone()
+            rules: self.rules.clone(),
+            message: self.message.clone(),
         }
     }
 }
 
-impl <T> Rule<T> for CompositeRule<T> {
+impl<T> Rule<T> for CompositeRule<T> {
     fn apply(&self, value: &T) -> ValidationResult {
         let errors = self.rules.iter()
             .map(|rule| rule.apply(value))
@@ -62,31 +66,31 @@ impl <T> Rule<T> for CompositeRule<T> {
             }
         }
     }
-
-    fn error_message(&self) -> Option<String> {
-        Option::None
-    }
 }
 
-pub struct CompositeRuleBuilder<T> {
-    rule: CompositeRule<T>
+pub struct RuleComposer<T> {
+    rule: CompositeRule<T>,
 }
 
-impl <T> Default for CompositeRuleBuilder<T> {
+impl<T> Default for RuleComposer<T> {
     fn default() -> Self {
-        CompositeRuleBuilder {
+        RuleComposer {
             rule: CompositeRule::default()
         }
     }
 }
 
-impl <T> CompositeRuleBuilder<T> {
+impl<T> RuleComposer<T> {
     pub fn kind(&mut self, kind: CompositionKind) -> &mut Self {
         self.rule.kind = kind;
         self
     }
     pub fn rule(&mut self, rule: impl Rule<T> + 'static) -> &mut Self {
         self.rule.rules.push(Rc::new(rule));
+        self
+    }
+    pub fn message(&mut self, message: String) -> &mut Self {
+        self.rule.message = Option::Some(message);
         self
     }
     pub fn compose(&mut self) -> CompositeRule<T> {
@@ -96,6 +100,6 @@ impl <T> CompositeRuleBuilder<T> {
     }
 }
 
-pub fn compose_rules<T>() -> CompositeRuleBuilder<T> {
-    CompositeRuleBuilder::default()
+pub fn compose_rules<T>() -> RuleComposer<T> {
+    RuleComposer::default()
 }
