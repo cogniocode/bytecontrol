@@ -1,24 +1,13 @@
-use bytecontrol::composition::compose_rules;
-use bytecontrol::condition::condition;
 use bytecontrol::rule::Rule;
 use bytecontrol::rules::string::length;
 
-struct User {
-    pub username: String
-}
-
 fn main() {
-    let user = User {
-        username: String::from("username")
-    };
+    let first_name = "Mike";
 
-    let rule = compose_rules()
-        .rule(length(10, 20))
-        .rule(condition(|val: &String| val.starts_with("user"), String::from("invalid name")))
-        .compose();
+    let rule = length(2, 32);
 
-    match rule.apply(&user.username) {
+    match rule.apply(&String::from(first_name)) {
         Ok(_) => println!("All good."),
-        Err(err) => println!("{}", err)
+        Err(err) => println!("Errors: {}", err)
     };
 }
