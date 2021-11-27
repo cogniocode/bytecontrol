@@ -52,7 +52,10 @@ impl<T> Rule<T> for CompositeRule<T> {
         match self.kind {
             CompositionKind::All => {
                 if errors.len() > 0 {
-                    Err(ValidationError::from(errors))
+                    match self.message.clone() {
+                        None => Err(ValidationError::from(errors)),
+                        Some(m) => Err(ValidationError::from(m))
+                    }
                 } else {
                     Ok(())
                 }
@@ -61,7 +64,10 @@ impl<T> Rule<T> for CompositeRule<T> {
                 if (self.rules.len() - errors.len()) > 0 {
                     Ok(())
                 } else {
-                    Err(ValidationError::from(errors))
+                    match self.message.clone() {
+                        None => Err(ValidationError::from(errors)),
+                        Some(m) => Err(ValidationError::from(m))
+                    }
                 }
             }
         }
@@ -138,6 +144,44 @@ mod tests {
         assert!(composite.apply(&String::from("test")).is_ok());
         assert!(composite.apply(&String::from("fail_test")).is_ok());
         assert!(composite.apply(&String::from("fail")).is_err());
+    }
+
+    #[test]
+    fn test_custom_message() {
+        let rule1 = test_rule_contains();
+        let rule2 = test_rule_starts_with();
+
+        let composite = compose_rules()
+            .kind(CompositionKind::All)
+            .rule(rule1)
+            .rule(rule2)
+            .message(String::from("test message"))
+            .compose();
+
+        let error = composite.apply(&String::from("fail_test")).unwrap_err();
+
+        assert_eq!(error.messages.first().unwrap(), "test message");
+    }
+
+    #[test]
+    fn test_provided_messages() {
+        let rule1 = test_rule_contains();
+        let rule2 = test_rule_starts_with();
+
+        let composite = compose_rules()
+            .kind(CompositionKind::All)
+            .rule(rule1)
+            .rule(rule2)
+            .compose();
+
+        let error_all = composite.apply(&String::from("fail")).unwrap_err();
+
+        assert!(error_all.messages.contains(&String::from("test contains")));
+        assert!(error_all.messages.contains(&String::from("test starts with")));
+
+        let error_starts_with = composite.apply(&String::from("fail_test")).unwrap_err();
+
+        assert!(error_starts_with.messages.contains(&String::from("test starts with")));
     }
 
     fn test_rule_contains() -> ConditionalRule<String> {
