@@ -103,3 +103,48 @@ impl<T> RuleComposer<T> {
 pub fn compose_rules<T>() -> RuleComposer<T> {
     RuleComposer::default()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::condition::{condition, ConditionalRule};
+    use super::*;
+
+    #[test]
+    fn test_composition_all() {
+        let rule1 = test_rule_contains();
+        let rule2 = test_rule_starts_with();
+
+        let composite = compose_rules()
+            .kind(CompositionKind::All)
+            .rule(rule1)
+            .rule(rule2)
+            .compose();
+
+        assert!(composite.apply(&String::from("test")).is_ok());
+        assert!(composite.apply(&String::from("fail_test")).is_err());
+    }
+
+    #[test]
+    fn test_composition_any() {
+        let rule1 = test_rule_contains();
+        let rule2 = test_rule_starts_with();
+
+        let composite = compose_rules()
+            .kind(CompositionKind::Any)
+            .rule(rule1)
+            .rule(rule2)
+            .compose();
+
+        assert!(composite.apply(&String::from("test")).is_ok());
+        assert!(composite.apply(&String::from("fail_test")).is_ok());
+        assert!(composite.apply(&String::from("fail")).is_err());
+    }
+
+    fn test_rule_contains() -> ConditionalRule<String> {
+        condition(|val: &String| val.contains("test"), String::from("test contains"))
+    }
+
+    fn test_rule_starts_with() -> ConditionalRule<String> {
+        condition(|val: &String| val.starts_with("test"), String::from("test starts with"))
+    }
+}
